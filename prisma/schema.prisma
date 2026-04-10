@@ -41,6 +41,7 @@ model Follow {
 model Tweet {
   id        String   @id @default(cuid())
   content   String   @db.VarChar(280) // Limita rigurosamente a 280 caracteres
+  imageUrl  String?  // Propiedad File extra opcional para media
   authorId  String
   createdAt DateTime @default(now())
   

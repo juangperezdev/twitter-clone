@@ -3,6 +3,9 @@ import { decrypt, deleteSession } from '@/lib/session'
 import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/db'
 import Link from 'next/link'
+import { TweetInteraction } from '@/components/TweetInteraction'
+import { createTweet } from '@/actions/tweet'
+import { ComposeTweet } from '@/components/ComposeTweet'
 
 export default async function HomePage() {
   const cookieStore = await cookies()
@@ -19,12 +22,13 @@ export default async function HomePage() {
     redirect('/login')
   }
 
-  // Fetch de TODOS los tweets (Timeline global para empezar)
+  // Fetch de TODOS los tweets con la data relacional esencial
   const tweets = await prisma.tweet.findMany({
     orderBy: { createdAt: 'desc' },
     include: {
       author: true,
-      _count: { select: { likes: true } }
+      _count: { select: { likes: true } },
+      likes: { select: { userId: true } } // Fundamental para saber si el "Corazón" del usuario está rojo
     }
   })
 
@@ -98,40 +102,12 @@ export default async function HomePage() {
           </div>
         </header>
 
-        {/* Compose Tweet Box */}
-        <div className="p-4 border-b border-zinc-800 flex gap-4 w-full">
-          <div className="w-10 h-10 bg-zinc-800 rounded-full shrink-0 overflow-hidden">
-             <img src={getAvatar(user.avatar, user.username)} alt="Avatar" className="w-full h-full object-cover" />
-          </div>
-          <form action={async (formData: FormData) => {
-            'use server';
-            const content = formData.get('content') as string;
-            if(!content || content.length > 280) return;
-            const { prisma } = await import('@/lib/db');
-            await prisma.tweet.create({ data: { content, authorId: user.id }})
-            redirect('/')
-          }} className="flex-1 w-full flex flex-col">
-            <textarea 
-              name="content"
-              placeholder="¿Qué está pasando?" 
-              className="w-full bg-transparent resize-none outline-none text-xl placeholder-zinc-500 min-h-[50px] overflow-hidden leading-relaxed block"
-              maxLength={280}
-              required
-            />
-            <div className="flex justify-between items-center pt-3 border-t border-zinc-800/60 mt-3 relative">
-               <div className="flex gap-2 text-sky-500">
-                  <div className="p-2 hover:bg-sky-500/10 rounded-full transition cursor-pointer">
-                    <svg viewBox="0 0 24 24" aria-hidden="true" className="w-5 h-5 fill-current"><g><path d="M3 5.5C3 4.119 4.119 3 5.5 3h13C19.881 3 21 4.119 21 5.5v13c0 1.381-1.119 2.5-2.5 2.5h-13C4.119 21 3 19.881 3 18.5v-13zM5.5 5c-.276 0-.5.224-.5.5v9.086l3-3 3 3 5-5 3 3V5.5c0-.276-.224-.5-.5-.5h-13zM19 15.414l-3-3-5 5-3-3-3 3V18.5c0 .276.224.5.5.5h13c.276 0 .5-.224.5-.5v-3.086zM9.75 7C8.784 7 8 7.784 8 8.75s.784 1.75 1.75 1.75 1.75-.784 1.75-1.75S10.716 7 9.75 7z"></path></g></svg>
-                  </div>
-               </div>
-              <button 
-                className="bg-sky-500 text-white font-bold px-5 py-1.5 rounded-full hover:bg-sky-600 transition disabled:opacity-50"
-              >
-                Postear
-              </button>
-            </div>
-          </form>
-        </div>
+        {/* Compose Tweet Box Interactiva con Preview */}
+        <ComposeTweet 
+           userAvatar={getAvatar(user.avatar, user.username)} 
+           userName={user.name || ''} 
+           userUsername={user.username} 
+        />
 
         {/* Live Feed List */}
         <div>
@@ -147,32 +123,17 @@ export default async function HomePage() {
                    <span className="text-zinc-500 shrink-0">·</span>
                    <span className="text-zinc-500 shrink-0 hover:underline">{new Date(tweet.createdAt).toLocaleDateString(undefined, {month:'short', day:'numeric'})}</span>
                  </div>
-                 <p className="mt-0.5 mb-2.5 text-[15px] leading-snug break-words">{tweet.content}</p>
+                 <p className="mt-0.5 mb-1.5 text-[15px] leading-snug break-words">{tweet.content}</p>
                  
-                 <div className="flex justify-between max-w-md text-zinc-500 text-sm">
-                   <button className="flex items-center gap-1.5 hover:text-sky-500 transition group/btn">
-                     <div className="p-2 rounded-full group-hover/btn:bg-sky-500/10 transition-colors">
-                        <svg className="w-[18px] h-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
-                     </div>
-                     <span>{Math.floor(Math.random() * 20)}</span>
-                   </button>
-                   <button className="flex items-center gap-1.5 hover:text-green-500 transition group/btn">
-                     <div className="p-2 rounded-full group-hover/btn:bg-green-500/10 transition-colors">
-                        <svg className="w-[18px] h-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
-                     </div>
-                   </button>
-                   <button className="flex items-center gap-1.5 hover:text-pink-600 transition group/btn">
-                     <div className="p-2 rounded-full group-hover/btn:bg-pink-600/10 transition-colors">
-                        <svg className="w-[18px] h-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>
-                     </div>
-                     <span>{tweet._count.likes}</span>
-                   </button>
-                   <button className="flex items-center gap-1.5 hover:text-sky-500 transition group/btn">
-                     <div className="p-2 rounded-full group-hover/btn:bg-sky-500/10 transition-colors">
-                        <svg className="w-[18px] h-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
-                     </div>
-                   </button>
-                 </div>
+                 {/* Si el post posee Media adjunta */}
+                 {tweet.imageUrl && (
+                    <div className="mt-2.5 mb-3 rounded-2xl overflow-hidden border border-zinc-800 flex bg-black">
+                      <img src={tweet.imageUrl} alt="Contenido multimedia del tweet" className="w-full object-cover max-h-[450px]" loading="lazy" />
+                    </div>
+                 )}
+                 
+                 {/* Acciones de React Client-Side (Likes / Eliminar) */}
+                 <TweetInteraction tweet={tweet} loggedUserId={user.id} />
                </div>
             </article>
           ))}
