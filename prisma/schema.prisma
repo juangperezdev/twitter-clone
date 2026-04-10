@@ -11,11 +11,13 @@ model User {
   email     String   @unique
   password  String
   username  String   @unique
-  name      String?
-  bio       String?
-  avatar    String?  // Avatar placeholder o URL
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  name             String?
+  bio              String?
+  avatar           String?  // Avatar placeholder o URL
+  resetToken       String?  @unique
+  resetTokenExpiry DateTime?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
   
   tweets    Tweet[]
   likes     Like[]

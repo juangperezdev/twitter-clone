@@ -56,10 +56,15 @@ export default function LoginPage() {
             <button 
               type="submit" 
               disabled={isPending}
-              className="w-full bg-sky-500 hover:bg-sky-400 active:scale-[0.98] transition-all text-white font-bold py-3.5 rounded-full flex justify-center mt-6 disabled:opacity-50 shadow-lg shadow-sky-500/20"
+              className="w-full bg-sky-500 hover:bg-sky-400 active:scale-[0.98] transition-all text-white font-bold py-3.5 rounded-full flex justify-center disabled:opacity-50 shadow-lg shadow-sky-500/20"
             >
               {isPending ? 'Conectando...' : 'Iniciar Sesión'}
             </button>
+            <div className="flex justify-center pt-2">
+                <Link href="/forgot-password" className="text-[13px] text-sky-500/80 hover:text-sky-400 font-medium transition-colors hover:underline">
+                  ¿Olvidaste tu contraseña?
+                </Link>
+            </div>
           </form>
 
           <p className="mt-8 text-center text-zinc-400 text-sm">

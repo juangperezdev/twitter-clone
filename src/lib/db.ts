@@ -5,11 +5,11 @@ import { PrismaClient } from '@prisma/client'
 const connectionString = `${process.env.DATABASE_URL}`
 
 const globalForPrisma = globalThis as unknown as {
-  prisma: PrismaClient | undefined
+  prismaV2: PrismaClient | undefined
 }
 
 export const prisma =
-  globalForPrisma.prisma ??
+  globalForPrisma.prismaV2 ??
   (() => {
     // Si olvidamos setear la URL local, lanzamos un error que se entienda
     if (!connectionString || connectionString === 'undefined') {
@@ -23,4 +23,4 @@ export const prisma =
   })()
 
 // Cachear la instancia en desarrollo para evitar agotar las conexiones
-if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma
+if (process.env.NODE_ENV !== 'production') globalForPrisma.prismaV2 = prisma
