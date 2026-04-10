@@ -1,0 +1,59 @@
+generator client {
+  provider        = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  username  String   @unique
+  name      String?
+  bio       String?
+  avatar    String?  // Avatar placeholder o URL
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  tweets    Tweet[]
+  likes     Like[]
+
+  // Relaciones "Follows"
+  followers Follow[] @relation("following")
+  following Follow[] @relation("follower")
+}
+
+model Follow {
+  followerId  String
+  followingId String
+  createdAt   DateTime @default(now())
+
+  follower  User @relation("follower", fields: [followerId], references: [id], onDelete: Cascade)
+  following User @relation("following", fields: [followingId], references: [id], onDelete: Cascade)
+
+  @@id([followerId, followingId]) // Llave primaria compuesta
+}
+
+model Tweet {
+  id        String   @id @default(cuid())
+  content   String   @db.VarChar(280) // Limita rigurosamente a 280 caracteres
+  authorId  String
+  createdAt DateTime @default(now())
+  
+  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  likes     Like[]
+}
+
+model Like {
+  id        String   @id @default(cuid())
+  userId    String
+  tweetId   String
+  createdAt DateTime @default(now())
+
+  user      User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tweet     Tweet @relation(fields: [tweetId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, tweetId]) // Un usuario solo puede darle like una vez a un tweet
+}

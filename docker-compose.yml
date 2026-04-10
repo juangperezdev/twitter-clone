@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: twitter_clone_db
+    restart: always
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: rootpassword
+      POSTGRES_DB: twitter_clone
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: twitter_clone_web
+    restart: always
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/.next
+    environment:
+      - DATABASE_URL=postgresql://root:rootpassword@db:5432/twitter_clone?schema=public
+    depends_on:
+      - db
+    # Prisma generate se debe ejecutar en dev localmente para refrescar el cliente siempre, 
+    # y luego iniciamos la app
+    command: >
+      sh -c "npx prisma generate && npm run dev"
+
+volumes:
+  postgres_data:

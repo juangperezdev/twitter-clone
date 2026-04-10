@@ -39,3 +39,10 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+/src/generated/prisma
+antigravity_doc.txt
+Antigravityplan.pdf
+TwitterClone_Challenge_TheFlock.docx.pdf
+.venv
+challenge.txt
