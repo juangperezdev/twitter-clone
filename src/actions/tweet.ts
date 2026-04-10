@@ -5,8 +5,7 @@ import { cookies } from 'next/headers'
 import { decrypt } from '@/lib/session'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
-import fs from 'fs'
-import path from 'path'
+import { put } from '@vercel/blob'
 
 async function getUserId() {
   const cookieStore = await cookies()
@@ -25,22 +24,33 @@ export async function createTweet(formData: FormData) {
   
   if (!content || content.length > 280) return
 
-  let imageUrl: string | null = null;
+  let imageUrl: string | null = null
 
   if (imageFile && imageFile.size > 0 && imageFile.name !== 'undefined') {
-    const bytes = await imageFile.arrayBuffer()
-    const buffer = Buffer.from(bytes)
+    // Si tenemos BLOB_READ_WRITE_TOKEN (Vercel), usar Vercel Blob
+    if (process.env.BLOB_READ_WRITE_TOKEN) {
+      const blob = await put(`tweets/${Date.now()}-${imageFile.name}`, imageFile, {
+        access: 'public',
+      })
+      imageUrl = blob.url
+    } else {
+      // Desarrollo local: guardar en filesystem
+      const fs = await import('fs')
+      const path = await import('path')
+      const bytes = await imageFile.arrayBuffer()
+      const buffer = Buffer.from(bytes)
 
-    const filename = Date.now() + '-' + imageFile.name.replace(/\s/g, '-')
-    const uploadDir = path.join(process.cwd(), 'public', 'uploads')
-    
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true })
+      const filename = Date.now() + '-' + imageFile.name.replace(/\s/g, '-')
+      const uploadDir = path.join(process.cwd(), 'public', 'uploads')
+      
+      if (!fs.existsSync(uploadDir)) {
+        fs.mkdirSync(uploadDir, { recursive: true })
+      }
+      
+      const filepath = path.join(uploadDir, filename)
+      fs.writeFileSync(filepath, buffer)
+      imageUrl = `/uploads/${filename}`
     }
-    
-    const filepath = path.join(uploadDir, filename)
-    fs.writeFileSync(filepath, buffer)
-    imageUrl = `/uploads/${filename}`
   }
 
   await prisma.tweet.create({
