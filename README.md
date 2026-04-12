@@ -91,5 +91,5 @@ npm test
 
 ## 👨‍💻 Créditos
 Desarrollado como parte del challenge de The Flock por Juangperezdev.
-- [GitHub](https://github.com/juangustavoperez)
-- [LinkedIn](https://linkedin.com/in/juangperezdev)
+- [GitHub](https://github.com/juangperezdev)
+- [LinkedIn](https://www.linkedin.com/in/juangustavoperez/)
