@@ -45,38 +45,47 @@ Esto automáticamente configurará la base de datos, sincronizará el esquema de
 
 ## 📐 Decisiones Técnicas y Arquitectura
 
-### 1. Sistema de Notificaciones
-He diseñado un sistema de notificaciones **push-based** integrado en los Server Actions. 
-- Cada vez que ocurre una acción (Like, Follow, Reply), se inserta un registro en la tabla `Notification` apuntando al destinatario. 
-- Para optimizar el rendimiento, el contador de notificaciones no leídas se consulta en el `layout` o componentes principales. 
-- **Trade-off**: En un sistema masivo, esto podría generar mucha escritura. Se recomienda mover esto a un sistema de colas (Redis) en el futuro.
+### 1. Stack Tecnológico: Next.js + Prisma + PostgreSQL
+He elegido **Next.js** (App Router) por su capacidad de mezclar Server e In-memory components, lo que permite una velocidad de respuesta inicial muy alta (SSR) y una gran interactividad. **Prisma** se utiliza como ORM por su robustez en el tipado y facilidad para manejar relaciones complejas.
 
-### 2. Threads (Hilos de Respuestas)
-He implementado una relación recursiva en el modelo `Tweet`:
-```prisma
-model Tweet {
-  parentId  String?
-  parent    Tweet?   @relation("replies", fields: [parentId], references: [id])
-  replies   Tweet[]  @relation("replies")
-}
-```
-Esto permite:
-- Visualizar el contexto (padre) al ver un tweet específico.
-- Cargar respuestas anidadas de forma eficiente mediante `include: { replies: true }`.
-- El feed principal filtra `parentId: null` para evitar duplicar contenido que ya está en hilos.
+### 2. Modelado del Grafo de Follows y Timeline
+Para el grafo social, utilicé una relación **N:M (muchos a muchos)** sobre la misma tabla `User` a través de una tabla intermedia `Follow`.
+- **Timeline**: El feed "Siguiendo" realiza una consulta `OR` que busca tweets donde el `authorId` sea el usuario actual o donde el autor esté presente en la lista de `following` del usuario. Esto garantiza que el usuario vea su propio contenido y el de sus contactos en un solo query ordenado por `createdAt`.
 
-### 3. Autenticación Stateless
-Se utiliza la librería `jose` para manejar JWTs en el Edge. Al ser stateless, no necesitamos consultar una tabla de sesiones en cada petición, lo que reduce la latencia de la DB considerablemente en el App Router de Next.js.
+### 3. Autenticación Stateless (JWT)
+Para cumplir con el requerimiento de **autenticación propia**, implementé un flujo basado en JWT utilizando la librería `jose`. 
+- Las sesiones son **stateless**: se cifran en un JWT almacenado en una cookie `HttpOnly`, `Secure` y `SameSite=Lax`. Esto elimina la necesidad de consultar una tabla de sesiones pesada, permitiendo que la app escale horizontalmente de forma sencilla.
+
+### 4. Real-time híbrido (SSE + Polling)
+Para el bonus de tiempo real, implementé un **Event Bus** en el backend. 
+- En local/servidores persistentes, se usa **SSE** para actualizaciones instantáneas. 
+- Para entornos serverless (Vercel), se añadió un mecanismo de **polling de respaldo** corto (10s) para asegurar que las notificaciones lleguen incluso si la conexión SSE se interrumpe por el ciclo de vida de la función.
+
+### 5. Uso de IA (Agentic Coding)
+Este proyecto fue desarrollado utilizando un enfoque de **Agentic Coding** coordinado por Antigravity, alternando entre diversos modelos de lenguaje de vanguardia según la complejidad de la tarea:
+- **Gemini 3.1 Pro (High/Low)**: Utilizado para el razonamiento arquitectónico profundo, diseño del esquema de base de datos y debugging de problemas complejos de concurrencia.
+- **Claude Sonnet 4.6 (Thinking)**: Clave para el refinamiento de la UI/UX y la lógica de componentes de frontend.
+- **Claude Opus 4.6 (Thinking)**: Empleado para tareas de refactorización crítica y lógica de negocio sensible.
+- **Gemini 3 Flash**: Utilizado para iteraciones rápidas, ajustes de estilos CSS y tareas de mantenimiento repetitivas.
+
+El uso de estos modelos permitió:
+- **Refactorización acelerada**: Mover lógica de componentes de cliente a Server Actions para mejorar el SEO y la seguridad.
+- **Generación de Tests**: Creación de una suite de integración robusta rápidamente con Vitest.
+- **Arquitectura**: Diseño inicial del esquema de base de datos recursivo para los hilos de conversación.
+- **Debugging Real-time**: Resolución de problemas de persistencia en SSE y EventBus en entornos serverless.
 
 ---
 
-## 🧪 Testing
+## 🧪 Testing y Credenciales
 
-La estabilidad del backend está garantizada por una suite de tests automáticos que cubren Auth, Tweets, Social, Timeline y Recovery:
-
+Para ejecutar los tests:
 ```bash
 npm test
 ```
+
+**Credenciales de Prueba (Demo User):**
+- **Email**: `demo@flock.com`
+- **Password**: `Password1!`
 
 ---
 
