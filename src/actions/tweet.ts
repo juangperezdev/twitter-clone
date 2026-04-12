@@ -70,10 +70,10 @@ export async function createTweet(formData: FormData) {
 
   // Emitir evento real-time via SSE
   try {
-    const { tweetBus } = await import('@/lib/events')
-    tweetBus.emit({
+    const { eventBus } = await import('@/lib/events')
+    eventBus.emit({
       type: 'new_tweet',
-      tweet: {
+      data: {
         ...tweet,
         createdAt: tweet.createdAt.toISOString(),
         author: {
@@ -85,7 +85,7 @@ export async function createTweet(formData: FormData) {
       }
     })
   } catch {
-    // SSE is best-effort, don't block tweet creation
+    // SSE is best-effort
   }
 
   // Notificación de respuesta
@@ -93,7 +93,7 @@ export async function createTweet(formData: FormData) {
     try {
       const parentTweet = await prisma.tweet.findUnique({ where: { id: parentId } })
       if (parentTweet && parentTweet.authorId !== userId) {
-        await prisma.notification.create({
+        const notif = await prisma.notification.create({
           data: {
             type: 'REPLY',
             recipientId: parentTweet.authorId,
@@ -101,6 +101,16 @@ export async function createTweet(formData: FormData) {
             tweetId: tweet.id
           }
         })
+
+        // Emitir notificación real-time
+        try {
+          const { eventBus } = await import('@/lib/events')
+          eventBus.emit({
+            type: 'new_notification',
+            recipientId: parentTweet.authorId,
+            data: notif
+          })
+        } catch {}
       }
     } catch (e) {
       console.error('Error creating reply notification:', e)
@@ -134,7 +144,7 @@ export async function toggleLike(tweetId: string) {
     try {
       const tweet = await prisma.tweet.findUnique({ where: { id: tweetId } })
       if (tweet && tweet.authorId !== userId) {
-        await prisma.notification.create({
+        const notif = await prisma.notification.create({
           data: {
             type: 'LIKE',
             recipientId: tweet.authorId,
@@ -142,6 +152,16 @@ export async function toggleLike(tweetId: string) {
             tweetId: tweetId
           }
         })
+
+        // Emitir notificación real-time
+        try {
+          const { eventBus } = await import('@/lib/events')
+          eventBus.emit({
+            type: 'new_notification',
+            recipientId: tweet.authorId,
+            data: notif
+          })
+        } catch {}
       }
     } catch (e) {
       console.error('Error creating like notification:', e)

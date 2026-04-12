@@ -1,4 +1,4 @@
-import { tweetBus } from '@/lib/events'
+import { eventBus } from '@/lib/events'
 
 export const dynamic = 'force-dynamic'
 
@@ -17,7 +17,7 @@ export async function GET() {
       }, 30000)
 
       // Suscribirse al bus de eventos
-      const unsubscribe = tweetBus.subscribe((event) => {
+      const unsubscribe = eventBus.subscribe((event) => {
         try {
           const data = `data: ${JSON.stringify(event)}\n\n`
           controller.enqueue(encoder.encode(data))

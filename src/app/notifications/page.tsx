@@ -3,6 +3,7 @@ import { cookies } from 'next/headers'
 import { decrypt } from '@/lib/session'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
+import { Sidebar } from '@/components/Sidebar'
 
 export default async function NotificationsPage() {
   // Auth check
@@ -35,7 +36,7 @@ export default async function NotificationsPage() {
     take: 50
   })
 
-  // Marcar como leídas (opcionalmente en background o via transition, aquí lo hacemos al cargar)
+  // Marcar como leídas
   await prisma.notification.updateMany({
     where: { recipientId: currentUserId, read: false },
     data: { read: true }
@@ -49,21 +50,7 @@ export default async function NotificationsPage() {
 
   return (
     <div className="min-h-screen bg-black text-white flex justify-center">
-      {/* Sidebar - Copiado de Main Layout por simplicidad en este MVP */}
-      <nav className="w-1/4 max-w-[275px] pt-4 px-4 h-screen sticky top-0 hidden sm:flex flex-col border-r border-zinc-800">
-        <Link href="/" className="mb-6 w-14 h-14 flex items-center justify-center rounded-full hover:bg-zinc-900 transition font-bold text-2xl bg-white text-black">
-          F
-        </Link>
-        <Link href="/" className="px-5 py-3 hover:bg-zinc-900 rounded-full w-fit mb-2 text-xl flex items-center gap-4 transition">
-           Inicio
-        </Link>
-        <Link href="/notifications" className="px-5 py-3 bg-zinc-900 rounded-full w-fit mb-2 text-xl flex items-center gap-4 transition font-bold">
-           Notificaciones
-        </Link>
-        <Link href="/search" className="px-5 py-3 hover:bg-zinc-900 rounded-full w-fit mb-2 text-xl flex items-center gap-4 transition">
-           Explorar
-        </Link>
-      </nav>
+      <Sidebar />
 
       <main className="flex-1 max-w-[600px] border-r border-zinc-800 min-h-screen">
         <header className="sticky top-0 z-40 bg-black/60 backdrop-blur-md border-b border-zinc-800 px-4 py-3">

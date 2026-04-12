@@ -34,8 +34,8 @@ export function TimelineFeed({ initialTweets, loggedUserId }: Props) {
         const data = JSON.parse(event.data)
         if (data.type === 'new_tweet') {
           // No mostrar nuestros propios tweets (ya los vemos al publicar)
-          if (data.tweet.authorId !== loggedUserId) {
-            setNewTweetsQueue(prev => [data.tweet, ...prev])
+          if (data.data.authorId !== loggedUserId) {
+            setNewTweetsQueue(prev => [data.data, ...prev])
           }
         }
       } catch {

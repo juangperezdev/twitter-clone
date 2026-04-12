@@ -5,6 +5,7 @@ import { redirect, notFound } from 'next/navigation'
 import Link from 'next/link'
 import { TweetInteraction } from '@/components/TweetInteraction'
 import { ComposeTweet } from '@/components/ComposeTweet'
+import { Sidebar } from '@/components/Sidebar'
 
 interface Props {
   params: Promise<{ id: string }>
@@ -23,7 +24,7 @@ export default async function StatusPage({ params }: Props) {
 
   const currentUser = await prisma.user.findUnique({ 
     where: { id: currentUserId },
-    select: { avatar: true, username: true, name: true }
+    select: { id: true, avatar: true, username: true, name: true }
   })
 
   if (!currentUser) redirect('/login')
