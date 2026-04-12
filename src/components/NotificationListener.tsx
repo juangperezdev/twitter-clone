@@ -11,23 +11,37 @@ export function NotificationListener({ initialCount, userId }: Props) {
   const [unreadCount, setUnreadCount] = useState(initialCount)
 
   useEffect(() => {
+    // 1. Conexión Real-Time (SSE) - Para feedback inmediato (ideal para local)
     const eventSource = new EventSource('/api/timeline/stream')
-
     eventSource.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data)
-        if (data.type === 'new_notification') {
-          // Solo incrementar si es para nosotros
-          if (data.recipientId === userId) {
-            setUnreadCount(prev => prev + 1)
-          }
+        if (data.type === 'new_notification' && data.recipientId === userId) {
+          setUnreadCount(prev => prev + 1)
         }
-      } catch {
-        // Ignorar errores de parsing
-      }
+      } catch {}
     }
 
-    return () => eventSource.close()
+    // 2. Polling de respaldo cada 10 segundos
+    // Esto asegura que funcione en Vercel incluso si el SSE se desconecta o no enruta bien.
+    const checkUnread = async () => {
+      try {
+        const res = await fetch('/api/notifications/count')
+        if (res.ok) {
+          const data = await res.json()
+          setUnreadCount(data.count)
+        }
+      } catch (error) {}
+    }
+
+    // Comprobar inmediatamente también
+    checkUnread()
+    const interval = setInterval(checkUnread, 10000)
+
+    return () => {
+      eventSource.close()
+      clearInterval(interval)
+    }
   }, [userId])
 
   if (unreadCount === 0) return null
