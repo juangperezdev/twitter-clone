@@ -3,6 +3,7 @@ import { PrismaClient } from '@prisma/client';
 import { faker } from '@faker-js/faker';
 import { Pool } from 'pg';
 import { PrismaPg } from '@prisma/adapter-pg';
+import bcrypt from 'bcryptjs';
 
 const connectionString = `${process.env.DATABASE_URL}`;
 if (!connectionString) throw new Error("DATABASE_URL is not set");
@@ -11,91 +12,127 @@ const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
 
 async function main() {
-  console.log('Seeding fake data...');
+  console.log('🌱 Limpiando base de datos...');
+  await prisma.like.deleteMany();
+  await prisma.follow.deleteMany();
+  await prisma.tweet.deleteMany();
+  await prisma.user.deleteMany();
 
-  // 1. Create 10 Users
-  const usersToCreate = Array.from({ length: 10 }).map(() => {
-    const firstName = faker.person.firstName();
-    const lastName = faker.person.lastName();
-    return {
-      email: faker.internet.email({ firstName, lastName }),
-      password: 'password123', // Hardcoded standard password
-      username: faker.internet.username({ firstName, lastName }).toLowerCase(),
-      name: `${firstName} ${lastName}`,
-      bio: faker.person.bio(),
-      avatar: faker.image.avatar(),
-    };
+  console.log('👤 Creando usuarios...');
+
+  const hashedPassword = await bcrypt.hash('Password1!', 10);
+
+  // Usuario de prueba conocido (para los evaluadores)
+  const testUser = await prisma.user.create({
+    data: {
+      email: 'demo@flock.com',
+      password: hashedPassword,
+      username: 'demo',
+      name: 'Usuario Demo',
+      bio: 'Cuenta de demostración para evaluadores de The Flock.',
+      avatar: null,
+    }
   });
 
-  const createdUsers = [];
-  for (const userData of usersToCreate) {
-    const user = await prisma.user.create({ data: userData });
-    createdUsers.push(user);
-  }
+  // 10 usuarios adicionales con datos realistas
+  const userPromises = Array.from({ length: 10 }).map(async () => {
+    const firstName = faker.person.firstName();
+    const lastName = faker.person.lastName();
+    const username = faker.internet
+      .username({ firstName, lastName })
+      .toLowerCase()
+      .replace(/[^a-z0-9_]/g, '')
+      .slice(0, 15);
 
-  // 2. Create Tweets for each user
+    return prisma.user.create({
+      data: {
+        email: faker.internet.email({ firstName, lastName }).toLowerCase(),
+        password: hashedPassword,
+        username,
+        name: `${firstName} ${lastName}`,
+        bio: faker.person.bio(),
+        avatar: null,
+      }
+    });
+  });
+
+  const fakeUsers = await Promise.all(userPromises);
+  const allUsers = [testUser, ...fakeUsers];
+
+  console.log(`✅ ${allUsers.length} usuarios creados`);
+
+  // Crear tweets para cada usuario (2-6 por persona)
+  console.log('💬 Creando tweets...');
   const tweets = [];
-  for (const user of createdUsers) {
-    const numTweets = faker.number.int({ min: 1, max: 5 }); // 1 to 5 tweets per user
+  for (const user of allUsers) {
+    const numTweets = faker.number.int({ min: 2, max: 6 });
     for (let i = 0; i < numTweets; i++) {
       const tweet = await prisma.tweet.create({
         data: {
           content: faker.lorem.sentences({ min: 1, max: 3 }).substring(0, 280),
           authorId: user.id,
+          createdAt: faker.date.recent({ days: 30 }),
         },
       });
       tweets.push(tweet);
     }
   }
+  console.log(`✅ ${tweets.length} tweets creados`);
 
-  // 3. Create Follows (cross-follows)
-  for (const user of createdUsers) {
-    const numFollows = faker.number.int({ min: 2, max: 5 });
-    // Random users to follow, excluding self
-    const potentialFollows = createdUsers.filter(u => u.id !== user.id);
+  // Crear follows cruzados
+  console.log('🤝 Creando follows...');
+  let followCount = 0;
+  for (const user of allUsers) {
+    const numFollows = faker.number.int({ min: 3, max: 7 });
+    const potentialFollows = allUsers.filter(u => u.id !== user.id);
     const shuffled = potentialFollows.sort(() => 0.5 - Math.random());
     const toFollow = shuffled.slice(0, numFollows);
 
     for (const followedUser of toFollow) {
-      await prisma.follow.create({
-        data: {
-          followerId: user.id,
-          followingId: followedUser.id,
-        },
-      });
+      try {
+        await prisma.follow.create({
+          data: {
+            followerId: user.id,
+            followingId: followedUser.id,
+          },
+        });
+        followCount++;
+      } catch {
+        // Ignorar duplicados
+      }
     }
   }
+  console.log(`✅ ${followCount} follows creados`);
 
-  // 4. Create Likes (cross-likes on tweets)
-  for (const user of createdUsers) {
-    const numLikes = faker.number.int({ min: 3, max: 10 });
+  // Crear likes cruzados
+  console.log('❤️ Creando likes...');
+  let likeCount = 0;
+  for (const user of allUsers) {
+    const numLikes = faker.number.int({ min: 5, max: 15 });
     const shuffledTweets = [...tweets].sort(() => 0.5 - Math.random());
     const tweetsToLike = shuffledTweets.slice(0, numLikes);
 
     for (const tweet of tweetsToLike) {
-      // Prevent double likes by checking
       const existingLike = await prisma.like.findUnique({
         where: {
-          userId_tweetId: {
-            userId: user.id,
-            tweetId: tweet.id,
-          },
+          userId_tweetId: { userId: user.id, tweetId: tweet.id },
         },
       });
 
       if (!existingLike) {
         await prisma.like.create({
-          data: {
-            userId: user.id,
-            tweetId: tweet.id,
-          },
+          data: { userId: user.id, tweetId: tweet.id },
         });
+        likeCount++;
       }
     }
   }
+  console.log(`✅ ${likeCount} likes creados`);
 
-  console.log('Seeding completed successfully!');
-  console.log(`Created ${createdUsers.length} users, ${tweets.length} tweets.`);
+  console.log('\n🎉 Seed completado exitosamente!');
+  console.log('📋 Credenciales de prueba:');
+  console.log('   Email: demo@flock.com');
+  console.log('   Password: Password1!');
 }
 
 main()
