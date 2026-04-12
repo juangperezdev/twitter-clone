@@ -11,7 +11,7 @@ vi.mock('@/lib/session', () => ({
 
 // Mock cookies
 const mockCookies = {
-  get: vi.fn(() => ({ value: 'mock-session-token' })),
+  get: vi.fn().mockReturnValue({ value: 'mock-session-token' } as any),
   set: vi.fn(),
   delete: vi.fn(),
 }
@@ -106,7 +106,7 @@ describe('Timeline Actions', () => {
     })
 
     it('should return empty for unauthenticated users', async () => {
-      mockCookies.get.mockReturnValueOnce(undefined)
+      mockCookies.get.mockReturnValueOnce(undefined as any)
       const { decrypt } = await import('@/lib/session')
       vi.mocked(decrypt).mockResolvedValueOnce(null)
       

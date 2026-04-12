@@ -4,13 +4,13 @@ import { prismaMock } from '../mocks/prisma'
 // Mock session
 const mockDecrypt = vi.fn(() => Promise.resolve({ userId: 'user-123' }))
 vi.mock('@/lib/session', () => ({
-  decrypt: (...args: any[]) => mockDecrypt(...args),
+  decrypt: mockDecrypt,
 }))
 
 // Mock cookies con estado mutable
 const mockCookieValue = { value: 'mock-session-token' }
 const mockCookies = {
-  get: vi.fn(() => mockCookieValue),
+  get: vi.fn().mockReturnValue(mockCookieValue as any),
   set: vi.fn(),
   delete: vi.fn(),
 }
@@ -28,7 +28,7 @@ describe('Tweet Actions', () => {
 
   describe('createTweet', () => {
     it('should redirect to login if not authenticated', async () => {
-      mockCookies.get.mockReturnValueOnce(undefined)
+      mockCookies.get.mockReturnValueOnce(undefined as any)
       
       const { createTweet } = await import('@/actions/tweet')
       const formData = new FormData()
@@ -112,7 +112,7 @@ describe('Tweet Actions', () => {
     })
 
     it('should throw if not authenticated', async () => {
-      mockCookies.get.mockReturnValueOnce(undefined)
+      mockCookies.get.mockReturnValueOnce(undefined as any)
       
       const { toggleLike } = await import('@/actions/tweet')
       await expect(toggleLike('tweet-123')).rejects.toThrow('Unauthenticated')
