@@ -1,6 +1,7 @@
 'use server'
 
 import { prisma } from '@/lib/db'
+import { headers } from 'next/headers'
 import crypto from 'crypto'
 import bcrypt from 'bcryptjs'
 
@@ -24,10 +25,11 @@ export async function forgotPassword(prevState: any, formData: FormData) {
       data: { resetToken, resetTokenExpiry }
     })
 
-    const resetUrl = `http://localhost:3000/reset-password?token=${resetToken}`
+    const host = (await headers()).get('host')
+    const protocol = process.env.NODE_ENV === 'development' ? 'http' : 'https'
+    const resetUrl = `${protocol}://${host}/reset-password?token=${resetToken}`
 
-    // 💡 OPTIMIZACIÓN LOCAL: En vez de enviar un correo por Nodemailer y depender del Rate-Limit,
-    // devolvemos la URL maestra al frontend en modo Dev por conveniencia. 
+    // 💡 OPTIMIZACIÓN EN SERVIDOR: Mostramos el link en consola y lo retornamos para el demo
     console.log(`\n[🔐 RECUPERACIÓN] Enlace secreto para restablecimiento de ${email}: \n${resetUrl}\n`)
 
     return { 
