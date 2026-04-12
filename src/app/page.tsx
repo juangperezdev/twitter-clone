@@ -27,9 +27,15 @@ export default async function HomePage() {
     where: { recipientId: user.id, read: false }
   })
 
-  // Fetch inicial (primera página, "Para ti")
+  // Fetch inicial (primera página, "Siguiendo" por defecto)
   const initialTweets = await prisma.tweet.findMany({
-    where: { parentId: null },
+    where: { 
+      parentId: null,
+      OR: [
+        { authorId: user.id },
+        { author: { followers: { some: { followerId: user.id } } } }
+      ]
+    },
     orderBy: { createdAt: 'desc' },
     take: 10,
     include: {
@@ -65,16 +71,27 @@ export default async function HomePage() {
       <main className="flex-1 w-full sm:w-[600px] sm:max-w-[600px] border-r border-zinc-800 min-h-screen pb-16 sm:pb-0">
         {/* Mobile header */}
         <header className="sticky top-0 z-40 bg-black/60 backdrop-blur-md border-b border-zinc-800">
-          <div className="flex items-center justify-between p-4 sm:hidden">
+          <div className="flex items-center justify-between p-4 sm:hidden pb-2">
             <Link href={`/${user.username}`} className="w-8 h-8 bg-zinc-800 rounded-full overflow-hidden">
               <img src={getAvatar(user.avatar, user.username)} alt="" className="w-full h-full object-cover" />
             </Link>
-            <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
+            <Link href="/" className="w-8 h-8 bg-white rounded-lg flex items-center justify-center -ml-4">
               <span className="text-black font-bold text-sm">F</span>
-            </div>
-            <div className="w-8" />
+            </Link>
+            
+            <form action={async () => {
+              'use server';
+              const { deleteSession } = await import('@/lib/session');
+              const { redirect } = await import('next/navigation');
+              await deleteSession();
+              redirect('/login');
+            }}>
+              <button type="submit" className="w-8 h-8 flex items-center justify-center text-zinc-500 hover:text-white transition">
+                <svg className="w-5 h-5 text-red-500/80" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
+              </button>
+            </form>
           </div>
-          <h1 className="text-xl font-bold p-4 pt-0 sm:pt-4 hidden sm:block">Inicio</h1>
+          <h1 className="text-xl font-bold p-4 pt-1 sm:pt-4 hidden sm:block">Inicio</h1>
         </header>
 
         {/* Compose */}
@@ -121,9 +138,6 @@ export default async function HomePage() {
             </div>
          </div>
       </aside>
-
-      {/* Mobile Bottom Nav */}
-      <MobileNav />
     </div>
   )
 }

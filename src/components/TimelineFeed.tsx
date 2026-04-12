@@ -17,7 +17,7 @@ function getAvatar(avatarUrl: string | null, seed: string) {
 }
 
 export function TimelineFeed({ initialTweets, loggedUserId }: Props) {
-  const [mode, setMode] = useState<'forYou' | 'following'>('forYou')
+  const [mode, setMode] = useState<'forYou' | 'following'>('following')
   const [tweets, setTweets] = useState(initialTweets)
   const [page, setPage] = useState(1) // Page 0 ya cargada desde SSR
   const [hasMore, setHasMore] = useState(initialTweets.length >= 10)

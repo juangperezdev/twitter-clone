@@ -53,7 +53,10 @@ export default async function NotificationsPage() {
       <Sidebar />
 
       <main className="flex-1 max-w-[600px] border-r border-zinc-800 min-h-screen">
-        <header className="sticky top-0 z-40 bg-black/60 backdrop-blur-md border-b border-zinc-800 px-4 py-3">
+        <header className="sticky top-0 z-40 bg-black/60 backdrop-blur-md border-b border-zinc-800 items-center gap-4 px-4 py-3 flex">
+          <Link href="/" className="p-2 hover:bg-zinc-900 rounded-full transition -ml-2 sm:hidden">
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+          </Link>
           <h1 className="text-xl font-bold">Notificaciones</h1>
         </header>
 

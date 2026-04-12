@@ -3,6 +3,7 @@ import { cookies } from 'next/headers'
 import { decrypt } from '@/lib/session'
 import { prisma } from '@/lib/db'
 import { NotificationListener } from './NotificationListener'
+import { MobileNav } from './MobileNav'
 
 function getAvatar(avatarUrl: string | null, seed: string) {
   return avatarUrl?.includes('cloudflare') || !avatarUrl
@@ -31,8 +32,9 @@ export async function Sidebar() {
   })
 
   return (
-    <nav className="w-1/4 max-w-[275px] pt-4 px-2 xl:px-4 h-screen sticky top-0 hidden sm:flex flex-col border-r border-zinc-800">
-      <Link href="/" className="mb-4 w-14 h-14 flex items-center justify-center rounded-full hover:bg-zinc-900 transition font-bold text-2xl">
+    <>
+      <nav className="w-1/4 max-w-[275px] pt-4 px-2 xl:px-4 h-screen sticky top-0 hidden sm:flex flex-col border-r border-zinc-800">
+        <Link href="/" className="mb-4 w-14 h-14 flex items-center justify-center rounded-full hover:bg-zinc-900 transition font-bold text-2xl">
         <div className="w-11 h-9 bg-white rounded-xl flex items-center justify-center">
             <span className="text-black font-bold text-xl">FX</span>
         </div>
@@ -88,5 +90,8 @@ export async function Sidebar() {
         </form>
       </div>
     </nav>
+      <MobileNav userId={userId} unreadCount={unreadCount} />
+    </>
   )
 }
+

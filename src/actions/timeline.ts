@@ -17,13 +17,12 @@ export async function loadTweets(page: number, mode: 'forYou' | 'following') {
 
   const baseWhere = mode === 'following' 
     ? {
-        author: {
-          followers: {
-            some: { followerId: userId }
-          }
-        }
+        OR: [
+          { authorId: userId },
+          { author: { followers: { some: { followerId: userId } } } }
+        ]
       }
-    : {} // "Para ti" = todos los tweets
+    : {}
 
   // Solo mostrar tweets principales en el feed (no respuestas)
   const whereClause = { ...baseWhere, parentId: null }

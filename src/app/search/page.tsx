@@ -55,8 +55,11 @@ export default function SearchPage() {
       </nav>
 
       <main className="flex-1 max-w-[600px] border-r border-zinc-800 min-h-screen">
-        <header className="sticky top-0 z-40 bg-black/60 backdrop-blur-md border-b border-zinc-800 p-4">
-          <div className="bg-zinc-900/70 rounded-full flex items-center px-4 py-3 group border border-transparent focus-within:border-sky-500 focus-within:bg-black transition-colors">
+        <header className="sticky top-0 z-40 bg-black/60 backdrop-blur-md border-b border-zinc-800 p-4 flex gap-2 items-center">
+          <Link href="/" className="p-2 hover:bg-zinc-900 rounded-full transition -ml-2 sm:hidden shrink-0">
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+          </Link>
+          <div className="flex-1 bg-zinc-900/70 rounded-full flex items-center px-4 py-3 group border border-transparent focus-within:border-sky-500 focus-within:bg-black transition-colors">
             <svg className="w-5 h-5 text-zinc-500 group-focus-within:text-sky-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
             <input
               type="text"
