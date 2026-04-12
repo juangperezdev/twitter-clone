@@ -15,11 +15,11 @@ export default function LoginPage() {
         
         <div className="relative">
           <div className="flex justify-center mb-6">
-            <div className="h-12 w-12 bg-sky-500 rounded-xl flex items-center justify-center shadow-lg shadow-sky-500/30">
-              <span className="text-white font-bold text-2xl">F</span>
+            <div className="h-12 w-16 bg-sky-500 rounded-xl flex items-center justify-center shadow-lg shadow-sky-500/30">
+              <span className="text-white font-bold text-2xl">FX</span>
             </div>
           </div>
-          <h1 className="text-3xl font-bold text-white mb-2 text-center tracking-tight">Bienvenido a Flock</h1>
+          <h1 className="text-3xl font-bold text-white mb-2 text-center tracking-tight">Bienvenido a Flock-X</h1>
           <p className="text-zinc-400 text-center mb-8 text-sm">Ingresa a tu cuenta para conectarte</p>
           
           <form action={action} className="space-y-4">

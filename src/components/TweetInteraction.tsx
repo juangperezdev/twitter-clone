@@ -12,35 +12,63 @@ export function TweetInteraction({ tweet, loggedUserId }: { tweet: any, loggedUs
   const [hasLiked, setHasLiked] = useState(hasLikedInitial)
   const [likeCount, setLikeCount] = useState(tweet._count.likes)
   
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  
   const isMine = tweet.authorId === loggedUserId
 
   const handleLike = (e: React.MouseEvent) => {
-    e.preventDefault() // Evita saltos de navegación si se envuelve en un Link
+    e.preventDefault()
     e.stopPropagation()
-    
-    // UI instantánea: Inmediatamente altera el contador antes que el Server
     setHasLiked(!hasLiked)
     setLikeCount(hasLiked ? likeCount - 1 : likeCount + 1)
-    
-    // Promesa Server-Side oculta
     startTransition(async () => {
       await toggleLike(tweet.id)
     })
   }
 
-  const handleDelete = (e: React.MouseEvent) => {
+  const handleDeleteClick = (e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
-    // Control Anti-Click Errado
-    if (confirm("¿Estás 100% seguro de que deseas eliminar este Flock? Esta acción no se puede deshacer.")) {
-      startTransition(async () => {
-        await deleteTweet(tweet.id)
-      })
-    }
+    setIsModalOpen(true)
+  }
+
+  const confirmDelete = () => {
+    setIsModalOpen(false)
+    startTransition(async () => {
+      await deleteTweet(tweet.id)
+    })
   }
 
   return (
     <div className="flex justify-between w-full max-w-md text-zinc-500 text-sm mt-1" onClick={e => e.preventDefault()}>
+      {/* Modal de Confirmación */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-sky-500/10 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+          <div 
+            className="bg-black border border-zinc-800 w-full max-w-[320px] rounded-2xl p-8 shadow-2xl animate-in zoom-in-95 duration-200"
+            onClick={e => e.stopPropagation()}
+          >
+            <h3 className="text-xl font-bold text-white mb-2">¿Eliminar Flock-X?</h3>
+            <p className="text-zinc-500 text-[15px] leading-snug mb-6">
+              Esta acción no se puede deshacer y se eliminará de tu perfil, de la cronología de tus seguidores y de los resultados de búsqueda.
+            </p>
+            <div className="flex flex-col gap-3">
+              <button 
+                onClick={confirmDelete}
+                className="w-full bg-white text-black hover:bg-zinc-200 transition-colors py-2.5 rounded-full font-bold text-[15px]"
+              >
+                Eliminar
+              </button>
+              <button 
+                onClick={() => setIsModalOpen(false)}
+                className="w-full bg-transparent border border-zinc-700 text-white hover:bg-zinc-900 transition-colors py-2.5 rounded-full font-bold text-[15px]"
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       
       {/* Reply Link */}
       <Link href={`/status/${tweet.id}`} className="flex items-center gap-1.5 hover:text-sky-500 transition group/btn outline-none">
@@ -73,7 +101,7 @@ export function TweetInteraction({ tweet, loggedUserId }: { tweet: any, loggedUs
 
       {/* REAL DELETE BUTTON (Condicionado a ser Autor) */}
       {isMine ? (
-        <button onClick={handleDelete} className="flex items-center gap-1.5 hover:text-red-500 transition group/btn outline-none">
+        <button onClick={handleDeleteClick} className="flex items-center gap-1.5 hover:text-red-500 transition group/btn outline-none">
           <div className="p-2 rounded-full group-hover/btn:bg-red-500/10 transition-colors">
              <svg className="w-[18px] h-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
           </div>

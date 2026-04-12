@@ -66,8 +66,10 @@ export default async function ProfilePage({ params, searchParams }: Props) {
     <div className="min-h-screen bg-black text-white flex justify-center">
       {/* Sidebar */}
       <nav className="w-1/4 max-w-[275px] pt-4 px-4 h-screen sticky top-0 hidden sm:flex flex-col border-r border-zinc-800">
-        <Link href="/" className="mb-6 w-14 h-14 flex items-center justify-center rounded-full hover:bg-zinc-900 transition font-bold text-2xl bg-white text-black">
-          F
+        <Link href="/" className="mb-4 w-14 h-14 flex items-center justify-center rounded-full hover:bg-zinc-900 transition">
+          <div className="w-11 h-9 bg-white rounded-xl flex items-center justify-center">
+            <span className="text-black font-bold text-xl">FX</span>
+          </div>
         </Link>
         <Link href="/" className="px-5 py-3.5 hover:bg-zinc-900 rounded-full w-fit mb-1 text-[20px] flex items-center gap-4 transition text-zinc-200">
           <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
@@ -181,12 +183,14 @@ export default async function ProfilePage({ params, searchParams }: Props) {
                   <span className="text-zinc-500 shrink-0">·</span>
                   <span className="text-zinc-500 shrink-0">{new Date(tweet.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
                 </div>
-                <p className="mt-0.5 mb-1.5 text-[15px] leading-snug break-words">{tweet.content}</p>
-                {tweet.imageUrl && (
-                  <div className="mt-2.5 mb-3 rounded-2xl overflow-hidden border border-zinc-800 flex bg-black">
-                    <img src={tweet.imageUrl} alt="Media" className="w-full object-cover max-h-[450px]" loading="lazy" />
-                  </div>
-                )}
+                <Link href={`/status/${tweet.id}`} className="block group/text">
+                  <p className="mt-0.5 mb-1.5 text-[15px] leading-snug break-words group-hover/text:text-zinc-100 transition-colors">{tweet.content}</p>
+                  {tweet.imageUrl && (
+                    <div className="mt-2.5 mb-3 rounded-2xl overflow-hidden border border-zinc-800 flex bg-black group-hover/text:border-zinc-700 transition-colors">
+                      <img src={tweet.imageUrl} alt="Media" className="w-full object-cover max-h-[450px]" loading="lazy" />
+                    </div>
+                  )}
+                </Link>
                 <TweetInteraction tweet={tweet} loggedUserId={currentUserId} />
               </div>
             </article>

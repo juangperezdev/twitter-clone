@@ -108,8 +108,11 @@ export async function createTweet(formData: FormData) {
   }
 
   revalidatePath('/')
-  if (parentId) revalidatePath(`/status/${parentId}`)
-  redirect('/')
+  if (parentId) {
+    revalidatePath(`/status/${parentId}`)
+  } else {
+    redirect('/')
+  }
 }
 
 export async function toggleLike(tweetId: string) {
@@ -146,6 +149,7 @@ export async function toggleLike(tweetId: string) {
   }
 
   revalidatePath('/')
+  revalidatePath(`/status/${tweetId}`)
 }
 
 export async function deleteTweet(tweetId: string) {
@@ -155,7 +159,15 @@ export async function deleteTweet(tweetId: string) {
   const tweet = await prisma.tweet.findUnique({ where: { id: tweetId } })
   if (tweet?.authorId !== userId) throw new Error('No tienes permisos de borrado')
 
+  const parentId = tweet?.parentId
+
   await prisma.tweet.delete({ where: { id: tweetId } })
 
   revalidatePath('/')
+  if (parentId) {
+    revalidatePath(`/status/${parentId}`)
+    redirect(`/status/${parentId}`)
+  } else {
+    redirect('/')
+  }
 }

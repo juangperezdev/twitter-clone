@@ -21,6 +21,13 @@ export default async function StatusPage({ params }: Props) {
   if (!session?.userId) redirect('/login')
   const currentUserId = String(session.userId)
 
+  const currentUser = await prisma.user.findUnique({ 
+    where: { id: currentUserId },
+    select: { avatar: true, username: true, name: true }
+  })
+
+  if (!currentUser) redirect('/login')
+
   // Cargar tweet con autor, padre e hijos
   const tweet = await prisma.tweet.findUnique({
     where: { id },
@@ -114,16 +121,15 @@ export default async function StatusPage({ params }: Props) {
         </article>
 
         {/* Reply Editor */}
-        <div className="p-4 border-b border-zinc-800">
-          <div className="flex gap-4">
-            <div className="w-10 h-10 rounded-full overflow-hidden bg-zinc-800 shrink-0">
-               {/* Avatar del usuario logueado pondríamos acá */}
-            </div>
-            <div className="flex-1">
-              <p className="text-sm text-zinc-500 mb-2">Respondiendo a <span className="text-sky-500">@{tweet.author.username}</span></p>
-              <ComposeTweet placeholder="Postea tu respuesta" parentId={tweet.id} />
-            </div>
-          </div>
+        <div className="pt-4 border-b border-zinc-800">
+          <p className="text-sm text-zinc-500 mb-[-8px] ml-[72px]">Respondiendo a <span className="text-sky-500">@{tweet.author.username}</span></p>
+          <ComposeTweet 
+            placeholder="Postea tu respuesta" 
+            parentId={tweet.id} 
+            userAvatar={getAvatar(currentUser.avatar, currentUser.username)}
+            userName={currentUser.name || ''}
+            userUsername={currentUser.username}
+          />
         </div>
 
         {/* Replies List */}

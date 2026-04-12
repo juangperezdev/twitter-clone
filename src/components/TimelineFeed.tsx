@@ -140,12 +140,14 @@ export function TimelineFeed({ initialTweets, loggedUserId }: Props) {
                 <span className="text-zinc-500 shrink-0">·</span>
                 <span className="text-zinc-500 shrink-0 hover:underline text-sm">{new Date(tweet.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
               </div>
-              <p className="mt-0.5 mb-1.5 text-[15px] leading-snug break-words">{tweet.content}</p>
-              {tweet.imageUrl && (
-                <div className="mt-2.5 mb-3 rounded-2xl overflow-hidden border border-zinc-800 flex bg-black">
-                  <img src={tweet.imageUrl} alt="Media" className="w-full object-cover max-h-[450px]" loading="lazy" />
-                </div>
-              )}
+              <Link href={`/status/${tweet.id}`} className="block group/text">
+                <p className="mt-0.5 mb-1.5 text-[15px] leading-snug break-words group-hover/text:text-zinc-100 transition-colors">{tweet.content}</p>
+                {tweet.imageUrl && (
+                  <div className="mt-2.5 mb-3 rounded-2xl overflow-hidden border border-zinc-800 flex bg-black group-hover/text:border-zinc-700 transition-colors">
+                    <img src={tweet.imageUrl} alt="Media" className="w-full object-cover max-h-[450px]" loading="lazy" />
+                  </div>
+                )}
+              </Link>
               <TweetInteraction tweet={tweet} loggedUserId={loggedUserId} />
             </div>
           </article>

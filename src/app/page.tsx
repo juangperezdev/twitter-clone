@@ -61,8 +61,8 @@ export default async function HomePage() {
       {/* Sidebar Izquierdo — oculto en mobile */}
       <nav className="w-1/4 max-w-[275px] pt-4 px-2 xl:px-4 h-screen sticky top-0 hidden sm:flex flex-col border-r border-zinc-800">
         <Link href="/" className="mb-4 w-14 h-14 flex items-center justify-center rounded-full hover:bg-zinc-900 transition">
-          <div className="w-9 h-9 bg-white rounded-xl flex items-center justify-center">
-            <span className="text-black font-bold text-xl">F</span>
+          <div className="w-11 h-9 bg-white rounded-xl flex items-center justify-center">
+            <span className="text-black font-bold text-xl">FX</span>
           </div>
         </Link>
         <Link href="/" className="px-4 xl:px-5 py-3 hover:bg-zinc-900 rounded-full w-fit mb-0.5 text-lg xl:text-[20px] font-bold flex items-center gap-4 transition">
