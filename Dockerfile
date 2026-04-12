@@ -1,9 +1,7 @@
-FROM node:20-alpine
+FROM node:22
 
 WORKDIR /app
 
-# Dependencias para Prisma en Alpine
-RUN apk add --no-cache libc6-compat
 
 # Copiamos archivos
 COPY package.json package-lock.json* ./
