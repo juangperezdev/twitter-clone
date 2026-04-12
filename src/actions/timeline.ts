@@ -15,7 +15,7 @@ export async function loadTweets(page: number, mode: 'forYou' | 'following') {
   if (!session?.userId) return { tweets: [], hasMore: false }
   const userId = String(session.userId)
 
-  const whereClause = mode === 'following' 
+  const baseWhere = mode === 'following' 
     ? {
         author: {
           followers: {
@@ -25,6 +25,9 @@ export async function loadTweets(page: number, mode: 'forYou' | 'following') {
       }
     : {} // "Para ti" = todos los tweets
 
+  // Solo mostrar tweets principales en el feed (no respuestas)
+  const whereClause = { ...baseWhere, parentId: null }
+
   const tweets = await prisma.tweet.findMany({
     where: whereClause,
     orderBy: { createdAt: 'desc' },
@@ -32,7 +35,7 @@ export async function loadTweets(page: number, mode: 'forYou' | 'following') {
     take: TWEETS_PER_PAGE + 1, // Tomamos 1 extra para saber si hay más
     include: {
       author: true,
-      _count: { select: { likes: true } },
+      _count: { select: { likes: true, replies: true } },
       likes: { select: { userId: true } }
     }
   })

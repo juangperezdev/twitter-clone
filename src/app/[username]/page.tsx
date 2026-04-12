@@ -8,10 +8,13 @@ import { TweetInteraction } from '@/components/TweetInteraction'
 
 interface Props {
   params: Promise<{ username: string }>
+  searchParams: Promise<{ tab?: string }>
 }
 
-export default async function ProfilePage({ params }: Props) {
+export default async function ProfilePage({ params, searchParams }: Props) {
   const { username } = await params
+  const { tab } = await searchParams
+  const activeTab = tab === 'likes' ? 'likes' : 'posts'
 
   // Auth check
   const cookieStore = await cookies()
@@ -35,9 +38,11 @@ export default async function ProfilePage({ params }: Props) {
   const isOwnProfile = profileUser.id === currentUserId
   const isFollowing = profileUser.followers.some(f => f.followerId === currentUserId)
 
-  // Tweets de este usuario
+  // Tweets a mostrar (propios o likeados)
   const tweets = await prisma.tweet.findMany({
-    where: { authorId: profileUser.id },
+    where: activeTab === 'likes' 
+      ? { likes: { some: { userId: profileUser.id } } }
+      : { authorId: profileUser.id },
     orderBy: { createdAt: 'desc' },
     include: {
       author: true,
@@ -52,18 +57,30 @@ export default async function ProfilePage({ params }: Props) {
       : avatarUrl;
   }
 
+  // Count unread notifications
+  const unreadCount = await prisma.notification.count({
+    where: { recipientId: currentUserId, read: false }
+  })
+
   return (
     <div className="min-h-screen bg-black text-white flex justify-center">
       {/* Sidebar */}
       <nav className="w-1/4 max-w-[275px] pt-4 px-4 h-screen sticky top-0 hidden sm:flex flex-col border-r border-zinc-800">
-        <Link href="/" className="mb-6 w-14 h-14 flex items-center justify-center rounded-full hover:bg-zinc-900 transition">
-          <div className="w-9 h-9 bg-white rounded-xl flex items-center justify-center">
-            <span className="text-black font-bold text-xl">F</span>
-          </div>
+        <Link href="/" className="mb-6 w-14 h-14 flex items-center justify-center rounded-full hover:bg-zinc-900 transition font-bold text-2xl bg-white text-black">
+          F
         </Link>
         <Link href="/" className="px-5 py-3.5 hover:bg-zinc-900 rounded-full w-fit mb-1 text-[20px] flex items-center gap-4 transition text-zinc-200">
           <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
           Inicio
+        </Link>
+        <Link href="/notifications" className="px-5 py-3.5 hover:bg-zinc-900 rounded-full w-fit mb-1 text-[20px] flex items-center gap-4 transition text-zinc-200 relative">
+          <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
+          Notificaciones
+          {unreadCount > 0 && (
+            <span className="absolute top-2 left-9 bg-sky-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full border-2 border-black">
+              {unreadCount}
+            </span>
+          )}
         </Link>
         <Link href="/search" className="px-5 py-3.5 hover:bg-zinc-900 rounded-full w-fit mb-1 text-[20px] flex items-center gap-4 transition text-zinc-200">
           <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
@@ -130,28 +147,37 @@ export default async function ProfilePage({ params }: Props) {
 
         {/* Tabs */}
         <div className="flex border-b border-zinc-800">
-          <div className="flex-1 flex justify-center hover:bg-zinc-900 transition cursor-pointer">
-            <span className="py-4 relative text-white font-bold text-sm">
+          <Link 
+            href={`/${username}`} 
+            className="flex-1 flex justify-center hover:bg-zinc-900 transition cursor-pointer"
+          >
+            <span className={`py-4 relative text-sm ${activeTab === 'posts' ? 'text-white font-bold' : 'text-zinc-500 font-medium'}`}>
               Posts
-              <div className="absolute bottom-0 left-0 right-0 h-1 bg-sky-500 rounded-full" />
+              {activeTab === 'posts' && <div className="absolute bottom-0 left-0 right-0 h-1 bg-sky-500 rounded-full" />}
             </span>
-          </div>
-          <div className="flex-1 flex justify-center hover:bg-zinc-900 transition cursor-pointer">
-            <span className="py-4 text-zinc-500 font-medium text-sm">Likes</span>
-          </div>
+          </Link>
+          <Link 
+            href={`/${username}?tab=likes`} 
+            className="flex-1 flex justify-center hover:bg-zinc-900 transition cursor-pointer"
+          >
+            <span className={`py-4 relative text-sm ${activeTab === 'likes' ? 'text-white font-bold' : 'text-zinc-500 font-medium'}`}>
+              Likes
+              {activeTab === 'likes' && <div className="absolute bottom-0 left-0 right-0 h-1 bg-sky-500 rounded-full" />}
+            </span>
+          </Link>
         </div>
 
-        {/* Tweets del usuario */}
+        {/* Listado de tweets */}
         <div>
           {tweets.map(tweet => (
-            <article key={tweet.id} className="p-4 border-b border-zinc-800 hover:bg-zinc-950/40 transition cursor-pointer flex gap-4">
-              <div className="w-10 h-10 bg-zinc-800 rounded-full shrink-0 overflow-hidden">
+            <article key={tweet.id} className="p-4 border-b border-zinc-800 hover:bg-zinc-950/40 transition flex gap-4">
+              <Link href={`/${tweet.author.username}`} className="w-10 h-10 bg-zinc-800 rounded-full shrink-0 overflow-hidden">
                 <img src={getAvatar(tweet.author.avatar, tweet.author.username)} alt="Avatar" className="w-full h-full object-cover" />
-              </div>
+              </Link>
               <div className="flex-1 w-full min-w-0">
-                <div className="flex items-center gap-1.5 text-[15px] truncate">
-                  <span className="font-bold truncate text-white max-w-[50%]">{tweet.author.name}</span>
-                  <span className="text-zinc-500 truncate">@{tweet.author.username}</span>
+                <div className="flex items-center gap-1.5 text-[15px] truncate text-white">
+                  <Link href={`/${tweet.author.username}`} className="font-bold truncate hover:underline">{tweet.author.name}</Link>
+                  <Link href={`/${tweet.author.username}`} className="text-zinc-500 truncate">@{tweet.author.username}</Link>
                   <span className="text-zinc-500 shrink-0">·</span>
                   <span className="text-zinc-500 shrink-0">{new Date(tweet.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
                 </div>
@@ -166,9 +192,15 @@ export default async function ProfilePage({ params }: Props) {
             </article>
           ))}
           {tweets.length === 0 && (
-            <div className="text-zinc-500 text-center py-16">
-              <p className="text-lg font-bold text-white mb-1">Todavía sin publicaciones</p>
-              <p className="text-sm">Cuando {isOwnProfile ? 'publiques' : `@${username} publique`} algo, aparecerá acá.</p>
+            <div className="text-zinc-500 text-center py-16 px-8">
+              <p className="text-lg font-bold text-white mb-1">
+                {activeTab === 'likes' ? 'No tienes likes todavía' : 'Todavía sin publicaciones'}
+              </p>
+              <p className="text-sm">
+                {activeTab === 'likes' 
+                  ? 'Cuando des like a un post, aparecerá acá.' 
+                  : (isOwnProfile ? 'Cuando publiques algo, aparecerá acá.' : `@${username} todavía no ha publicado nada.`)}
+              </p>
             </div>
           )}
         </div>

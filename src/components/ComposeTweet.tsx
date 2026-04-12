@@ -3,7 +3,19 @@
 import { useState, useRef } from 'react'
 import { createTweet } from '@/actions/tweet'
 
-export function ComposeTweet({ userAvatar, userName, userUsername }: { userAvatar: string, userName: string, userUsername: string }) {
+export function ComposeTweet({ 
+  userAvatar, 
+  userName, 
+  userUsername, 
+  parentId, 
+  placeholder = "¿Qué está pasando?" 
+}: { 
+  userAvatar?: string, 
+  userName?: string, 
+  userUsername?: string, 
+  parentId?: string,
+  placeholder?: string
+}) {
   const [preview, setPreview] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const formRef = useRef<HTMLFormElement>(null)
@@ -41,9 +53,10 @@ export function ComposeTweet({ userAvatar, userName, userUsername }: { userAvata
         }} 
         className="flex-1 w-full flex flex-col"
       >
+        <input type="hidden" name="parentId" value={parentId || ''} />
         <textarea 
           name="content"
-          placeholder="¿Qué está pasando?" 
+          placeholder={placeholder} 
           className="w-full bg-transparent resize-none outline-none text-xl placeholder-zinc-500 min-h-[50px] overflow-hidden leading-relaxed block"
           maxLength={280}
           required

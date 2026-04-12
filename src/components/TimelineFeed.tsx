@@ -23,12 +23,45 @@ export function TimelineFeed({ initialTweets, loggedUserId }: Props) {
   const [hasMore, setHasMore] = useState(initialTweets.length >= 10)
   const [isPending, startTransition] = useTransition()
   const observerRef = useRef<HTMLDivElement>(null)
+  const [newTweetsQueue, setNewTweetsQueue] = useState<any[]>([])
+
+  // SSE: Real-time updates
+  useEffect(() => {
+    const eventSource = new EventSource('/api/timeline/stream')
+
+    eventSource.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data)
+        if (data.type === 'new_tweet') {
+          // No mostrar nuestros propios tweets (ya los vemos al publicar)
+          if (data.tweet.authorId !== loggedUserId) {
+            setNewTweetsQueue(prev => [data.tweet, ...prev])
+          }
+        }
+      } catch {
+        // Ignorar mensajes mal formados
+      }
+    }
+
+    eventSource.onerror = () => {
+      // Reconexión automática del EventSource
+    }
+
+    return () => eventSource.close()
+  }, [loggedUserId])
+
+  // Función para incorporar tweets nuevos al timeline
+  const showNewTweets = useCallback(() => {
+    setTweets(prev => [...newTweetsQueue, ...prev])
+    setNewTweetsQueue([])
+  }, [newTweetsQueue])
 
   // Cambiar de tab
   const switchMode = useCallback((newMode: 'forYou' | 'following') => {
     setMode(newMode)
     setPage(0)
     setHasMore(true)
+    setNewTweetsQueue([]) // Limpiar cola al cambiar de tab
     startTransition(async () => {
       const result = await loadTweets(0, newMode)
       setTweets(result.tweets)
@@ -82,6 +115,16 @@ export function TimelineFeed({ initialTweets, loggedUserId }: Props) {
           </span>
         </button>
       </div>
+
+      {/* Banner de nuevos tweets (real-time SSE) */}
+      {newTweetsQueue.length > 0 && (
+        <button
+          onClick={showNewTweets}
+          className="w-full py-3 text-sky-500 text-sm font-medium hover:bg-sky-500/5 transition border-b border-zinc-800 cursor-pointer"
+        >
+          Mostrar {newTweetsQueue.length} {newTweetsQueue.length === 1 ? 'nuevo post' : 'nuevos posts'}
+        </button>
+      )}
 
       {/* Tweet list */}
       <div>

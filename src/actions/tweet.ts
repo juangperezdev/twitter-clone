@@ -21,6 +21,7 @@ export async function createTweet(formData: FormData) {
 
   const content = formData.get('content') as string
   const imageFile = formData.get('image') as File | null
+  const parentId = formData.get('parentId') as string | null
   
   if (!content || content.length > 280) return
 
@@ -53,15 +54,61 @@ export async function createTweet(formData: FormData) {
     }
   }
 
-  await prisma.tweet.create({
+  const tweet = await prisma.tweet.create({
     data: {
       content,
       imageUrl,
-      authorId: userId
+      authorId: userId,
+      parentId: parentId || null
+    },
+    include: {
+      author: true,
+      _count: { select: { likes: true } },
+      likes: { select: { userId: true } }
     }
   })
 
+  // Emitir evento real-time via SSE
+  try {
+    const { tweetBus } = await import('@/lib/events')
+    tweetBus.emit({
+      type: 'new_tweet',
+      tweet: {
+        ...tweet,
+        createdAt: tweet.createdAt.toISOString(),
+        author: {
+          ...tweet.author,
+          createdAt: tweet.author.createdAt.toISOString(),
+          updatedAt: tweet.author.updatedAt.toISOString(),
+          resetTokenExpiry: tweet.author.resetTokenExpiry?.toISOString() || null,
+        }
+      }
+    })
+  } catch {
+    // SSE is best-effort, don't block tweet creation
+  }
+
+  // Notificación de respuesta
+  if (parentId) {
+    try {
+      const parentTweet = await prisma.tweet.findUnique({ where: { id: parentId } })
+      if (parentTweet && parentTweet.authorId !== userId) {
+        await prisma.notification.create({
+          data: {
+            type: 'REPLY',
+            recipientId: parentTweet.authorId,
+            actorId: userId,
+            tweetId: tweet.id
+          }
+        })
+      }
+    } catch (e) {
+      console.error('Error creating reply notification:', e)
+    }
+  }
+
   revalidatePath('/')
+  if (parentId) revalidatePath(`/status/${parentId}`)
   redirect('/')
 }
 
@@ -79,6 +126,23 @@ export async function toggleLike(tweetId: string) {
     await prisma.like.delete({ where: { id: existingLike.id } })
   } else {
     await prisma.like.create({ data: { userId, tweetId } })
+
+    // Crear notificación de like
+    try {
+      const tweet = await prisma.tweet.findUnique({ where: { id: tweetId } })
+      if (tweet && tweet.authorId !== userId) {
+        await prisma.notification.create({
+          data: {
+            type: 'LIKE',
+            recipientId: tweet.authorId,
+            actorId: userId,
+            tweetId: tweetId
+          }
+        })
+      }
+    } catch (e) {
+      console.error('Error creating like notification:', e)
+    }
   }
 
   revalidatePath('/')

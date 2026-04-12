@@ -55,12 +55,14 @@ describe('Tweet Actions', () => {
       formData.set('content', 'This is a valid tweet!')
       
       await expect(createTweet(formData)).rejects.toThrow('REDIRECT:/')
-      expect(prismaMock.tweet.create).toHaveBeenCalledWith({
-        data: expect.objectContaining({
-          content: 'This is a valid tweet!',
-          authorId: 'user-123',
-        }),
-      })
+      expect(prismaMock.tweet.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            content: 'This is a valid tweet!',
+            authorId: 'user-123',
+          }),
+        })
+      )
     })
 
     it('should enforce 280 character limit', async () => {

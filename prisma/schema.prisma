@@ -22,6 +22,10 @@ model User {
   tweets    Tweet[]
   likes     Like[]
 
+  // Notificaciones
+  notificationsReceived Notification[] @relation("notificationRecipient")
+  notificationsSent     Notification[] @relation("notificationActor")
+
   // Relaciones "Follows"
   followers Follow[] @relation("following")
   following Follow[] @relation("follower")
@@ -43,10 +47,16 @@ model Tweet {
   content   String   @db.VarChar(280) // Limita rigurosamente a 280 caracteres
   imageUrl  String?  // Propiedad File extra opcional para media
   authorId  String
+  parentId  String?
   createdAt DateTime @default(now())
   
   author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
   likes     Like[]
+  
+  parent    Tweet?   @relation("replies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies   Tweet[]  @relation("replies")
+  
+  notifications Notification[]
 }
 
 model Like {
@@ -59,4 +69,24 @@ model Like {
   tweet     Tweet @relation(fields: [tweetId], references: [id], onDelete: Cascade)
 
   @@unique([userId, tweetId]) // Un usuario solo puede darle like una vez a un tweet
+}
+
+enum NotificationType {
+  FOLLOW
+  LIKE
+  REPLY
+}
+
+model Notification {
+  id          String           @id @default(cuid())
+  type        NotificationType
+  recipientId String
+  actorId     String
+  tweetId     String?          // Opcional, para likes y replies
+  read        Boolean          @default(false)
+  createdAt   DateTime         @default(now())
+
+  recipient   User   @relation("notificationRecipient", fields: [recipientId], references: [id], onDelete: Cascade)
+  actor       User   @relation("notificationActor", fields: [actorId], references: [id], onDelete: Cascade)
+  tweet       Tweet? @relation(fields: [tweetId], references: [id], onDelete: Cascade)
 }

@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { toggleLike, deleteTweet } from '@/actions/tweet'
+import Link from 'next/link'
 
 export function TweetInteraction({ tweet, loggedUserId }: { tweet: any, loggedUserId: string }) {
   const [isPending, startTransition] = useTransition()
@@ -41,13 +42,13 @@ export function TweetInteraction({ tweet, loggedUserId }: { tweet: any, loggedUs
   return (
     <div className="flex justify-between w-full max-w-md text-zinc-500 text-sm mt-1" onClick={e => e.preventDefault()}>
       
-      {/* Fake Reply Button para diseño premium */}
-      <button className="flex items-center gap-1.5 hover:text-sky-500 transition group/btn outline-none">
+      {/* Reply Link */}
+      <Link href={`/status/${tweet.id}`} className="flex items-center gap-1.5 hover:text-sky-500 transition group/btn outline-none">
         <div className="p-2 rounded-full group-hover/btn:bg-sky-500/10 transition-colors">
           <svg className="w-[18px] h-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
         </div>
-        <span className="font-medium text-xs">{tweet.id.charCodeAt(0) % 15 || 1}</span>
-      </button>
+        <span className="font-medium text-xs">{tweet._count.replies || 0}</span>
+      </Link>
 
       {/* Fake Retweet */}
       <button className="flex items-center gap-1.5 hover:text-green-500 transition group/btn outline-none">

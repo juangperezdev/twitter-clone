@@ -43,6 +43,19 @@ export async function toggleFollow(targetUserId: string) {
         followingId: targetUserId
       }
     })
+
+    // Crear notificación de nuevo seguidor
+    try {
+      await prisma.notification.create({
+        data: {
+          type: 'FOLLOW',
+          recipientId: targetUserId,
+          actorId: userId
+        }
+      })
+    } catch (e) {
+      console.error('Error creating follow notification:', e)
+    }
   }
 
   revalidatePath('/')
