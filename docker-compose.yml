@@ -11,6 +11,11 @@ services:
       POSTGRES_DB: twitter_clone
     ports:
       - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U root -d twitter_clone"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
@@ -26,9 +31,10 @@ services:
       - DATABASE_URL=postgresql://root:rootpassword@db:5432/twitter_clone?schema=public
       - SESSION_SECRET=flock_twitter_clone_super_secret_key_2026
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     command: >
-      sh -c "npx prisma generate && npx prisma db push && npm run dev"
+      sh -c "npx prisma generate && npx prisma db push && npx prisma db seed && npm run dev -- -H 0.0.0.0"
 
 volumes:
   postgres_data:

@@ -44,7 +44,7 @@ Sigue estos comandos en orden para dejar el entorno listo. No se asumen pasos pr
     ```
 
 5.  **Preparar la Base de Datos (Prisma)**:
-    Sincroniza el esquema con la base de datos y genera el cliente de Prisma.
+    Sincroniza el esquema con la base de datos y genera el cliente de Prisma. (Nota: Si usas Docker Compose, esto ocurre automáticamente).
     ```bash
     npx prisma db push
     ```
@@ -53,17 +53,24 @@ Sigue estos comandos en orden para dejar el entorno listo. No se asumen pasos pr
 
 ## ⚡ Cómo levantar la aplicación (Modo Desarrollo)
 
-Una vez completada la instalación, puedes iniciar el servidor de desarrollo:
+### Opción A (Recomendada para Evaluadores): Docker Todo-en-uno
+Este comando levanta la DB y la App, configurando el esquema y los datos iniciales automáticamente:
+```bash
+docker-compose up --build
+```
 
+### Opción B: Ejecución Nativa
+Si prefieres correrlo fuera de Docker:
 ```bash
 npm run dev
 ```
-
 La aplicación estará disponible en: [http://localhost:3000](http://localhost:3000)
 
 ---
 
 ## 🌱 Cómo correr el Seed de Datos
+
+Si usas la **Opción B (Nativa)** o quieres resetear la base de datos:
 
 Si deseas poblar la base de datos con usuarios, tweets, likes y seguidores de prueba (faker):
 

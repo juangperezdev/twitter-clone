@@ -10,7 +10,7 @@ Si tienes Docker instalado, puedes levantar todo el stack (Next.js + PostgreSQL)
 docker-compose up --build
 ```
 
-Esto automáticamente configurará la base de datos, sincronizará el esquema de Prisma e iniciará la aplicación en [http://localhost:3000](http://localhost:3000).
+Esto automáticamente configurará la base de datos, sincronizará el esquema de Prisma, **ejecutará el seed de datos** e iniciará la aplicación en [http://localhost:3000](http://localhost:3000). Al terminar de subir, la app tendrá contenido listo para probar.
 
 ---
 
