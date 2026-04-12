@@ -15,9 +15,18 @@ export default async function HomePage() {
   if (!sessionCookie) redirect('/login')
 
   const session = await decrypt(sessionCookie)
-  if (!session?.userId) redirect('/login')
+  
+  let user = null;
+  if (session?.userId && typeof session.userId === 'string') {
+    try {
+      user = await prisma.user.findUnique({ where: { id: session.userId } })
+    } catch (e) {
+      console.error("Prisma error fetching user:", e);
+      // If DB error happens, likely stale connection or reset DB, force logout
+      redirect('/login');
+    }
+  }
 
-  const user = await prisma.user.findUnique({ where: { id: String(session.userId) } })
   if (!user) {
     redirect('/login')
   }
