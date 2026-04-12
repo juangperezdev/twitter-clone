@@ -95,11 +95,11 @@ describe('Timeline Actions', () => {
       expect(prismaMock.tweet.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: {
-            author: {
-              followers: {
-                some: { followerId: 'user-123' },
-              },
-            },
+            parentId: null,
+            OR: [
+              { authorId: 'user-123' },
+              { author: { followers: { some: { followerId: 'user-123' } } } },
+            ],
           },
         }),
       )

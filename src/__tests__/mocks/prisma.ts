@@ -30,6 +30,13 @@ export const prismaMock = {
     delete: vi.fn(),
     deleteMany: vi.fn(),
   },
+  notification: {
+    create: vi.fn(),
+    findMany: vi.fn(),
+    count: vi.fn(),
+    update: vi.fn(),
+    deleteMany: vi.fn(),
+  },
   $disconnect: vi.fn(),
 }
 

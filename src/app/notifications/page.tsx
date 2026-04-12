@@ -14,6 +14,10 @@ export default async function NotificationsPage() {
   if (!session?.userId) redirect('/login')
   const currentUserId = String(session.userId)
 
+  // Verify user still exists (in case of DB reset)
+  const userExists = await prisma.user.findUnique({ where: { id: currentUserId }, select: { id: true } })
+  if (!userExists) redirect('/login')
+
   // Cargar notificaciones
   const notifications = await prisma.notification.findMany({
     where: { recipientId: currentUserId },

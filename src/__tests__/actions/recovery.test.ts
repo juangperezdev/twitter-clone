@@ -10,8 +10,12 @@ vi.mock('@/lib/session', () => ({
 const mockCookies = {
   get: vi.fn(() => ({ value: 'mock-session-token' })),
 }
+const mockHeaders = {
+  get: vi.fn().mockReturnValue('localhost:3000'),
+}
 vi.mock('next/headers', () => ({
   cookies: vi.fn(() => Promise.resolve(mockCookies)),
+  headers: vi.fn(() => Promise.resolve(mockHeaders)),
 }))
 
 describe('Recovery Actions', () => {

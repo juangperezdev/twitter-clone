@@ -138,7 +138,9 @@ export function TimelineFeed({ initialTweets, loggedUserId }: Props) {
                 <Link href={`/${tweet.author.username}`} className="font-bold hover:underline truncate text-white max-w-[50%]">{tweet.author.name}</Link>
                 <span className="text-zinc-500 truncate hidden sm:inline">@{tweet.author.username}</span>
                 <span className="text-zinc-500 shrink-0">·</span>
-                <span className="text-zinc-500 shrink-0 hover:underline text-sm">{new Date(tweet.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
+                <span className="text-zinc-500 shrink-0 hover:underline text-sm" suppressHydrationWarning>
+                  {new Date(tweet.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                </span>
               </div>
               <Link href={`/status/${tweet.id}`} className="block group/text">
                 <p className="mt-0.5 mb-1.5 text-[15px] leading-snug break-words group-hover/text:text-zinc-100 transition-colors">{tweet.content}</p>
