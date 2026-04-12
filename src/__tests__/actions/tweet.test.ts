@@ -127,7 +127,7 @@ describe('Tweet Actions', () => {
         authorId: 'user-123',
       })
       
-      await deleteTweet('tweet-1')
+      await expect(deleteTweet('tweet-1')).rejects.toThrow('REDIRECT:/')
       
       expect(prismaMock.tweet.delete).toHaveBeenCalledWith({
         where: { id: 'tweet-1' },
