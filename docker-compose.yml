@@ -24,17 +24,17 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: twitter_clone_web
-    restart: always
     ports:
       - "3000:3000"
+    mem_limit: 2g
     environment:
       - DATABASE_URL=postgresql://root:rootpassword@db:5432/twitter_clone?schema=public
       - SESSION_SECRET=flock_twitter_clone_super_secret_key_2026
+      - NODE_OPTIONS=--max-old-space-size=2048
     depends_on:
       db:
         condition: service_healthy
-    command: >
-      sh -c "npx prisma generate && npx prisma db push && npx prisma db seed && npm run dev -- -H 0.0.0.0"
+    command: sh -c "npx prisma generate && npx prisma db push && npx prisma db seed && npm run dev -- -H 0.0.0.0"
 
 volumes:
   postgres_data:
