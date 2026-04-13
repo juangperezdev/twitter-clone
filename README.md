@@ -6,6 +6,12 @@ Clon funcional de Twitter/X construido como challenge técnico para [The Flock](
 
 Si tienes Docker instalado, puedes levantar todo el stack (Next.js + PostgreSQL) con un solo comando:
 
+**Clonar el repositorio**:
+```bash
+    git clone https://github.com/juangustavoperez/twitter-clone.git
+    cd twitter-clone
+```
+
 ```bash
 docker-compose up --build
 ```
@@ -38,7 +44,11 @@ Esto automáticamente configurará la base de datos, sincronizará el esquema de
 
 1.  **Dependencias**: `npm install`
 2.  **Variables de Entorno**: Configurar `.env` basado en `.env.example`.
-3.  **Base de Datos**: `npx prisma db push`
+3.  **Base de Datos**: 
+```bash
+npx prisma generate
+npx prisma db push
+```
 4.  **Ejecutar**: `npm run dev`
 
 ---
