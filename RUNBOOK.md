@@ -46,6 +46,7 @@ Sigue estos comandos en orden para dejar el entorno listo. No se asumen pasos pr
 5.  **Preparar la Base de Datos (Prisma)**:
     Sincroniza el esquema con la base de datos y genera el cliente de Prisma. (Nota: Si usas Docker Compose, esto ocurre automáticamente).
     ```bash
+    npx prisma generate
     npx prisma db push
     ```
 
