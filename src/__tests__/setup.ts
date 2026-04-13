@@ -2,13 +2,15 @@ import '@testing-library/jest-dom'
 import { vi } from 'vitest'
 
 // Mock next/headers (cookies)
+const mockCookieStore = {
+  get: vi.fn(),
+  set: vi.fn(),
+  delete: vi.fn(),
+}
 vi.mock('next/headers', () => ({
-  cookies: vi.fn(() => Promise.resolve({
-    get: vi.fn(),
-    set: vi.fn(),
-    delete: vi.fn(),
-  })),
+  cookies: vi.fn(() => Promise.resolve(mockCookieStore)),
 }))
+export { mockCookieStore }
 
 // Mock next/navigation
 vi.mock('next/navigation', () => ({

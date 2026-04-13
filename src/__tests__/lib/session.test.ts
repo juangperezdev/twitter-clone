@@ -1,32 +1,12 @@
 // @vitest-environment node
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { SignJWT, jwtVerify } from 'jose'
-
-// Test the session logic directly without importing session.ts (which has server-only)
-// This tests the core encrypt/decrypt logic
-const secretKey = 'test-secret-key-that-is-long-enough-32chars!'
-const encodedKey = new TextEncoder().encode(secretKey)
-
-async function encrypt(payload: any) {
-  return new SignJWT(payload)
-    .setProtectedHeader({ alg: 'HS256' })
-    .setIssuedAt()
-    .setExpirationTime('7d')
-    .sign(encodedKey)
-}
-
-async function decrypt(session: string | undefined = '') {
-  try {
-    const { payload } = await jwtVerify(session!, encodedKey, {
-      algorithms: ['HS256'],
-    })
-    return payload
-  } catch {
-    return null
-  }
-}
+import { encrypt, decrypt } from '@/lib/session'
+import { SignJWT } from 'jose'
 
 describe('Session Library', () => {
+  const secretKey = process.env.SESSION_SECRET || 'test-secret'
+  const encodedKey = new TextEncoder().encode(secretKey)
+
   it('should encrypt and decrypt a payload correctly', async () => {
     const payload = { userId: 'user-123' }
     const token = await encrypt(payload)
@@ -86,5 +66,34 @@ describe('Session Library', () => {
     
     const result = await decrypt(wrongToken)
     expect(result).toBeNull()
+  })
+
+  describe('Session Management', () => {
+    it('createSession should set a session cookie', async () => {
+      const { createSession } = await import('@/lib/session')
+      const { cookies } = await import('next/headers')
+      const cookieStore = await cookies()
+      
+      await createSession('user-123')
+      
+      expect(cookieStore.set).toHaveBeenCalledWith(
+        'session',
+        expect.any(String),
+        expect.objectContaining({
+          httpOnly: true,
+          path: '/',
+        })
+      )
+    })
+
+    it('deleteSession should delete the session cookie', async () => {
+      const { deleteSession } = await import('@/lib/session')
+      const { cookies } = await import('next/headers')
+      const cookieStore = await cookies()
+      
+      await deleteSession()
+      
+      expect(cookieStore.delete).toHaveBeenCalledWith('session')
+    })
   })
 })

@@ -100,6 +100,7 @@ describe('Auth Actions', () => {
 
     it('should create user and redirect on valid registration', async () => {
       const { register } = await import('@/actions/auth')
+      const { createSession } = await import('@/lib/session')
       
       prismaMock.user.findFirst.mockResolvedValueOnce(null)
       prismaMock.user.create.mockResolvedValueOnce({ id: 'new-user-id' })
@@ -112,6 +113,7 @@ describe('Auth Actions', () => {
       
       await expect(register(undefined, formData)).rejects.toThrow('REDIRECT:/')
       expect(prismaMock.user.create).toHaveBeenCalledOnce()
+      expect(createSession).toHaveBeenCalledWith('new-user-id')
     })
   })
 
